@@ -18,16 +18,16 @@ Notes from the course https://www.linkedin.com/learning/developing-for-web-perfo
 
 ## How to measure performance?
 Best practice is to use several different tools to collect data to compare and analyze. 
-- **Browser tools**: Lighthouse (Chrome), network monitor and performance monitor in modern browsers
-- **Hosted third-party tools**: PageSpeed Insights (Goodle), WebPage Test
+- **Browser tools**: [Lighthouse](https://developers.google.com/web/tools/lighthouse/) (Chrome), network monitor and performance monitor in modern browsers
+- **Hosted third-party tools**: [PageSpeed Insights](https://pagespeed.web.dev/) (Google), [WebPage Test](https://www.webpagetest.org/)
 
 Standard performance measurements: 
 
-- **Time to first byte (TTFB)**: the time it takes for the browser to receive the first byte of the actual page it's looking for
-- **First Paint**: 
-- **Largest Contentful Paint**:
-- **First Meaningful Paint**:
-- **Time to Interactive**:
+- **Time to first byte (TTFB)**: the time it takes for the browser to receive the first byte of the resource it's looking for
+- **First Paint**: when the first pixel renders on a screen e.g. a background color
+- **First Contentful Paint (FCP)**: when the browser renders the first bit of content from the DOM e.g. images or text
+- **Largest Contentful Paint (LCP)**: the time it takes to show the largest content on the screen e.g. the largest image or text block above the fold
+- **Time to Interactive (TTI)**: the time it takes for a page to be fully interactive, ready for user input
 
 ## Http2 
 
@@ -79,6 +79,24 @@ How to create realistic budget for own site?
 - Test production build against perf budget (can test with different server and browsers configs). Check where bottlenecks are.
 
  Perf budgets are unique to each project and its requirements + can change over time
+ 
+ ## Optimizing images
+ 
+ Images have by far the largest impact on performance. 
+ - **image quality**: The more detail the image has, the larger the data necessary to display it. Huge data savings & performance gains in reducing the quality of the images. [Squoosh](https://squoosh.app/): service to compress image files as much as possible. Shallow depth of field means better performance.
+ - **image scaling**: it's possible to downscale an image by 87% to reduce complexity and then upscale the result by 115% to get an image of the same starting size with significant less complexity, without anyone noticing.
+ - **image format**: image format or file type has direct impact on performance (JPG/JPEG, PNG, GIF, SVG, WebP). WebP: lossless and lossy image format with transparency created for the web, aims to replce JPG/JPEG - smaller image sizes than JPG/JPEG and PNG, however only supported by modern browsers (need to use JPG fallbacks for older browsers). Always use video instead of animated GIF.
+ - **manual image optimization**: decide maximum visible size of the image - good rule is never go over 1920px width for full-bleed images. Scale images to maximum displayed size, so not to serve an image larger than displayed size. Experiment with compression in WebP and JPG, the lower the compression the better - good rule is around 75%. Run svgs through svgs compressors to ensure they are as simple as possible.
+ - **automated image optimization**: dedicated tools for image optimization, [imagemin](https://www.npmjs.com/package/imagemin) and its plugins to compress different image formats, [Squoosh experimental CLI](https://www.npmjs.com/package/@squoosh/cli), [sharp](https://www.npmjs.com/package/sharp)(which provide whole suite of image optimization, transformation and modification). Advice: use sharp to generate different sized images if needed, then imagemin to minify the generated images.
+ - **responsive images**: in order to deliver appropriately sized image every time use source sets (`srcset`) and `sizes`, so browser can pick correct image for each viewport. Sizes attribute defined the image size at any screen width using media queries. Always provide an image for the smallest possible screen (usually 320px) + make widest image 1920px + control displayed width for other images using sizes attribute & finding natural breakpoints. Try to limit yourself to 4/5 image sizes.
+ - **lazy loading images**: native lazy loading supported by all modern browsers with the loading=lazy img attribute. For older browsers support: [lazysizes](https://github.com/aFarkas/lazysizes)
+
+## Markup and content
+
+- **Javascript**: minify to reduce size and uglify to improve code efficiency ([Uglify](https://www.npmjs.com/package/uglify-js), [Terser](https://www.npmjs.com/package/terser), [Webpack](https://webpack.js.org/guides/production/#minification)), code split and use ESM modules when possible. JS fuynctionality should be modularised as much as possible and split in different files: clear separation of concerns, can be loaded conditionally ( = perf benefits) and when one module updates not all JS need to be downloaded again. First load only critical Js, then necessary functionality, then lazy load the rest.
+    - script tag is **render blocking**: `async` and `defer` keywords change this behaviour improving performance as browser parsing isn't paused while the script is being downloaded. **Async**: loading is asynchronous but execution is synchronous. **Defer**: loading is styll async (not render blocking) but execution is deferred until the HTML parsing is complete ( = same as placing `script` tag at the bottom of the `body`, except script is loaded async so better perf). Best practices: place `script` tags in `head`, use `async` as default, defer scripts that can be or that need fully built DOM.
+    - Js modules can be lazy loaded using `import()`, so that they're loaded only when they're needed
+- CSS: minify, post process, inline critical css, defer loading non-critical css. 
  
  
 
