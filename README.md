@@ -45,6 +45,8 @@ Files and data sent between browser and server via http ( Hypertext Transfer Pro
 - **sending files**, how many and which files are requested: lage css/js bundles, large image files
     - **optimizations**: modularize js and css, take advantage of http2 multiplexing, async/defer js, defer non-critical css, optimize images to reduce file size and lazy-load images, compress all files using gzip and/or Brotli
 
+CDNs such as CloudFlare often include advanced caching, auto-compression of assets and optimization of images out of the box. 
+
 ## Caching
 
 - **On the server**: esp vital for server-side rendered content (e.g. from a CMS), so server doesn't have to generate the same assets for every request. Subsequent requests are given a stored cached snapshot of the page instead of freshly rendered page. Whenever an asset changes page needs to be re-rendered, but caching still extremely worthwile.
@@ -62,7 +64,7 @@ Files and data sent between browser and server via http ( Hypertext Transfer Pro
 
 Performance is determined by page weight = how many total bytes of data need to travel over the internet to the browser. A performance budget may include limites on the total page weight, total image weight, no. of http requests, no. of external resources etc. Budget gives a metric to measure any new feature against + decisioning tool.
 
-Useful tools: [Webpack performance options](https://webpack.js.org/configuration/performance/), [Lighthouse's LightWallet](https://web.dev/use-lighthouse-for-performance-budgets/) feature to test builds against perf budget.
+Useful tools: [Webpack performance options](https://webpack.js.org/configuration/performance/), [Lighthouse's LightWallet](https://web.dev/use-lighthouse-for-performance-budgets/) feature to test builds against perf budget, whereas to check bundle size: [Webpack bundle analyser](https://github.com/webpack-contrib/webpack-bundle-analyzer)
 
 Best practice metrics (based on a low-powered feature phone on 3G):
 - Speed index under 3 seconds
@@ -78,7 +80,7 @@ How to create realistic budget for own site?
 - Set reasonable goals based on audit
 - Test production build against perf budget (can test with different server and browsers configs). Check where bottlenecks are.
 
- Perf budgets are unique to each project and its requirements + can change over time
+ Perf budgets are unique to each project and its requirements + can change over time. 
  
  ## Optimizing images
  
@@ -96,7 +98,31 @@ How to create realistic budget for own site?
 - **Javascript**: minify to reduce size and uglify to improve code efficiency ([Uglify](https://www.npmjs.com/package/uglify-js), [Terser](https://www.npmjs.com/package/terser), [Webpack](https://webpack.js.org/guides/production/#minification)), code split and use ESM modules when possible. JS fuynctionality should be modularised as much as possible and split in different files: clear separation of concerns, can be loaded conditionally ( = perf benefits) and when one module updates not all JS need to be downloaded again. First load only critical Js, then necessary functionality, then lazy load the rest.
     - script tag is **render blocking**: `async` and `defer` keywords change this behaviour improving performance as browser parsing isn't paused while the script is being downloaded. **Async**: loading is asynchronous but execution is synchronous. **Defer**: loading is styll async (not render blocking) but execution is deferred until the HTML parsing is complete ( = same as placing `script` tag at the bottom of the `body`, except script is loaded async so better perf). Best practices: place `script` tags in `head`, use `async` as default, defer scripts that can be or that need fully built DOM.
     - Js modules can be lazy loaded using `import()`, so that they're loaded only when they're needed
-- CSS: minify, post process, inline critical css, defer loading non-critical css. 
- 
- 
+- **CSS**: inline any styles impacting above the fold content - critical css -, defer loading non-critical css using a separate stylesheet (tools: [Critical](https://www.npmjs.com/package/critical), [Critters](https://www.npmjs.com/package/critters-webpack-plugin)). Prefer component-based css loading: each component can load its own css when needed.
+
+## Web fonts
+
+Web fonts require their own stylesheets and font files, which often live on external services e.g. Google fonts. Can cause UX issues e.g. FOUT (flash of unstyled text) or FOIT (flash of invisible text). 
+
+Consider using a system font instead of a web font. Limit the number of font families, weights amd styles. Use critical css and defer non-critical fonts loading using a matching fallback system font.
+
+- **Third-party hosted fonts**: only pick fonts styles and weights actually used. Combine requests for multiple font families into one. dns-prefetch the API and preconnect to the font file service. Use `display=swap` if possible to display first whichever font is available and then swap to custom web font when downloaded (to avoid FOIT). Use `text=[yourText]` if only small character set is used e.g. for a logo (with Google fonts).
+
+            <link rel="dns-prefetch" href="//fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+            <link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,700&display=swap" rel="stylesheet">
+
+ - **Self-hosted fonts**: self-hosting gives you an automatic perf boost (no need to connect to third party). In the `@font-face` rule, set `font-display: swap`. If custom font really necessary straighaway, font file can be preloaded so that it is already available when needed in the css @font-face declaration (this will create perf hit, depending on what's more important: getting page to load fast vs getting fonts load fast).
+
+            <link rel="preload" href="[customFont]" as="font" type="font/woff2" />
+            <link rel="stylesheet" href="fonts/[customFont].css" />
+            
+- **Variable fonts** unlike static fonts, same font file can generate different font weigths, usually only two files needed for all fonts styles and weights.
+
+
+## Resources
+
+- [Web dev](https://web.dev/learn/) performance sections
+- [MDN](https://developer.mozilla.org/en-US/docs/Web/Performance) performance web docs
+
 
