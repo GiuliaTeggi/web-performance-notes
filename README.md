@@ -122,7 +122,7 @@ Consider using a system font instead of a web font. Limit the number of font fam
 
 ## Resources
 
-- [Web dev](https://web.dev/learn/) performance sections
+- [Web dev](https://web.dev/learn/) performance sections and [web vitals patterns](https://web.dev/patterns/web-vitals-patterns/)
 - [MDN](https://developer.mozilla.org/en-US/docs/Web/Performance) performance web docs
 
 
